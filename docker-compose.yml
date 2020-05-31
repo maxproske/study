@@ -1,0 +1,17 @@
+version: '3.7'
+
+services:
+  study-client:
+    container_name: study-client
+    build:
+      context: ./client
+      dockerfile: debug.Dockerfile
+    # Sync local changes with container
+    volumes:
+      - ./client/public:/app/public
+      - ./client/src:/app/src
+    ports:
+      - 3000:3000
+    # Fix react-scripts exiting with code 0
+    # https://github.com/facebook/create-react-app/issues/8688#issuecomment-602110747
+    stdin_open: true
