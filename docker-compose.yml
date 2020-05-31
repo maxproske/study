@@ -12,6 +12,21 @@ services:
       - ./client/src:/app/src
     ports:
       - 3000:3000
+    depends_on:
+      - study-server
     # Fix react-scripts exiting with code 0
     # https://github.com/facebook/create-react-app/issues/8688#issuecomment-602110747
     stdin_open: true
+      
+  study-server:
+    container_name: study-server
+    build:
+      context: ./server
+      dockerfile: debug.Dockerfile
+    environment:
+      TOGGL_API_TOKEN: ${TOGGL_API_TOKEN}
+    # Sync local changes with container
+    volumes:
+      - ./server/api:/app/api
+    ports:
+      - 5000:5000
