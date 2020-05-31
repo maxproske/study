@@ -50,23 +50,23 @@ app.get('/api/projects', async (req, res) => {
   return res.json(projects)
 })
 
-app.get('/api/details/v2', async (req, res) => {
-  const { v2ReportsUrl, userAgent, workspaceId } = togglConfig
+// app.get('/api/entries/v2', async (req, res) => {
+//   const { v2ReportsUrl, userAgent, workspaceId } = togglConfig
 
-  // Note: Maximum date range is 365 days
-  const since = '2017-01-01'
-  const until = '2017-12-31'
-  const page = 1
-  const url = `${v2ReportsUrl}/details.json?user_agent=${userAgent}&workspace_id=${workspaceId}&since=${since}&until=${until}&page=${page}`
-  const details = await axiosInstance
-    .get(url)
-    .then((res) => res.data)
-    .catch((err) => err)
+//   // Note: Maximum date range is 365 days
+//   const since = '2017-01-01'
+//   const until = '2017-12-31'
+//   const page = 1
+//   const url = `${v2ReportsUrl}/entries.json?user_agent=${userAgent}&workspace_id=${workspaceId}&since=${since}&until=${until}&page=${page}`
+//   const entries = await axiosInstance
+//     .get(url)
+//     .then((res) => res.data)
+//     .catch((err) => err)
 
-  return res.json(details)
-})
+//   return res.json(entries)
+// })
 
-app.get('/api/details/v3', async (req, res) => {
+app.get('/api/entries', async (req, res) => {
   const { v3ReportsUrl, userAgent, workspaceId } = togglConfig
 
   // Note: Maximum allowed date range is 1 year
@@ -81,7 +81,7 @@ app.get('/api/details/v3', async (req, res) => {
     end_date: endDate,
   }
 
-  let details = await axiosInstance
+  let entries = await axiosInstance
     .post(url, body)
     .then((res) => {
       const parseConfig = {
@@ -100,28 +100,30 @@ app.get('/api/details/v3', async (req, res) => {
     })
     .catch((err) => err.response)
 
-  // Filter invalid entries
-  details = details.filter((detail) => {
-    return detail.duration
-  })
-
-  // Format values
-  details = details.map((detail) => {
-    return {
-      ...detail,
-      duration: parseDuration(detail.duration), // '00:25:00' → 1500
-    }
-  })
-
   // Error handling
-  if (details.status) {
-    return res.status(details.status).json({
-      code: details.status.toString(),
-      message: details.statusText,
+  if (entries.status) {
+    return res.status(entries.status).json({
+      code: entries.status.toString(),
+      message: entries.statusText,
     })
   }
 
-  return res.json(details)
+  // Filter entries without a duration and project
+  entries = entries.filter((entry) => {
+    return entry.duration && entry.project
+  })
+
+  // Format response
+  entries = entries.map((entry) => {
+    return {
+      project: entry.project,
+      description: entry.description,
+      start_date: entry.start_date,
+      seconds: parseDuration(entry.duration), // '00:25:00' → 1500
+    }
+  })
+
+  return res.json(entries)
 })
 
 // Custom middleware to catch non-existant routes
