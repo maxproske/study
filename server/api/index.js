@@ -1,6 +1,7 @@
 const express = require('express')
 const cors = require('cors')
 const morgan = require('morgan')
+const axios = require('axios')
 
 const app = express()
 
@@ -14,9 +15,21 @@ app.use(express.json())
 morgan.token('body', (req) => Object.keys(req.body).length && JSON.stringify(req.body))
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'))
 
+// Create axios instance
+const axiosInstance = axios.create({
+  // Toggl expects API token as username and 'api_token' string as password
+  auth: {
+    username: process.env.TOGGL_API_TOKEN,
+    password: 'api_token',
+  },
+})
+
 // Routes
-app.get('/api/users', (req, res) => {
-  res.json([])
+app.get('/api/projects', async (req, res) => {
+  // TODO: Cache this using redis or something
+  const projects = await axiosInstance.get(`https://toggl.com/api/v9/me/projects`).then((response) => response.data)
+
+  return res.json(projects)
 })
 
 // Custom middleware to catch non-existant routes
