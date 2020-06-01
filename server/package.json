@@ -13,7 +13,8 @@
     "express": "^4.17.1",
     "moment": "^2.26.0",
     "morgan": "^1.10.0",
-    "papaparse": "^5.2.0"
+    "papaparse": "^5.2.0",
+    "redis": "^3.0.2"
   },
   "devDependencies": {
     "nodemon": "^2.0.4"

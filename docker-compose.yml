@@ -30,3 +30,11 @@ services:
       - ./server/api:/app/api
     ports:
       - 5000:5000
+
+  study-redis:
+    container_name: study-redis
+    build:
+      context: ./redis
+      dockerfile: debug.Dockerfile
+    ports:
+      - 6379:6379
