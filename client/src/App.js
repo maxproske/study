@@ -75,7 +75,8 @@ export const App = () => {
         }
       }
 
-      results = results.sort((a, b) => a.start_date.localeCompare(b.start_date))
+      // Reverse sort
+      results = results.sort((a, b) => b.start_date.localeCompare(a.start_date))
 
       setBlocks(results)
     }

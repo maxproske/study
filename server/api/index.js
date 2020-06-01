@@ -104,64 +104,70 @@ app.get('/api/entries', async (req, res) => {
     }
     // Key doesn't exist in Redis store
     else {
-      console.log('missed entries cache')
-      // Note: Maximum allowed date range is 1 year
-      const startDate = '2017-01-01'
-      const endDate = '2017-12-31'
+      const lol = await Promise.all(
+        [2017, 2018, 2019, 2020].map(async (year) => {
+          console.log('missed entries cache')
+          // Note: Maximum allowed date range is 1 year
+          const startDate = `${year}-01-01`
+          const endDate = `${year}-12-31`
 
-      // Note: Without the .csv extension we're limited to 50 time entries, with no way to paginate
-      const url = `${v3ReportsUrl}/workspace/${workspaceId}/search/time_entries.csv`
-      const body = {
-        user_agent: userAgent,
-        start_date: startDate,
-        end_date: endDate,
-      }
-
-      let entries = await axiosInstance
-        .post(url, body)
-        .then((res) => {
-          const parseConfig = {
-            header: true, // Use key-value pairs
-            dynamicTyping: true, // Use integers/null
-            // Format headers
-            transformHeader: (header) => {
-              header = header.toLowerCase() // Expect lowercase key
-              header = header.split(' ').join('_') // Replace spaces in key with underscores
-              return header
-            },
+          // Note: Without the .csv extension we're limited to 50 time entries, with no way to paginate
+          const url = `${v3ReportsUrl}/workspace/${workspaceId}/search/time_entries.csv`
+          const body = {
+            user_agent: userAgent,
+            start_date: startDate,
+            end_date: endDate,
           }
-          const parsed = Papa.parse(res.data, parseConfig)
 
-          return parsed.data
+          let entries = await axiosInstance
+            .post(url, body)
+            .then((res) => {
+              const parseConfig = {
+                header: true, // Use key-value pairs
+                dynamicTyping: true, // Use integers/null
+                // Format headers
+                transformHeader: (header) => {
+                  header = header.toLowerCase() // Expect lowercase key
+                  header = header.split(' ').join('_') // Replace spaces in key with underscores
+                  return header
+                },
+              }
+              const parsed = Papa.parse(res.data, parseConfig)
+
+              return parsed.data
+            })
+            .catch((err) => err.response)
+
+          // Error handling
+          if (entries.status) {
+            return res.status(entries.status).json({
+              code: entries.status.toString(),
+              message: entries.statusText,
+            })
+          }
+
+          // Filter entries without a duration and project
+          entries = entries.filter((entry) => {
+            return entry.duration && entry.project
+          })
+
+          // Format response
+          entries = entries.map((entry) => {
+            return {
+              project: entry.project,
+              description: entry.description,
+              start_date: entry.start_date,
+              seconds: parseDuration(entry.duration), // '00:25:00' → 1500
+            }
+          })
+
+          return entries
         })
-        .catch((err) => err.response)
+      )
 
-      // Error handling
-      if (entries.status) {
-        return res.status(entries.status).json({
-          code: entries.status.toString(),
-          message: entries.statusText,
-        })
-      }
+      client.set(entriesRedisKey, JSON.stringify(lol.flat()))
 
-      // Filter entries without a duration and project
-      entries = entries.filter((entry) => {
-        return entry.duration && entry.project
-      })
-
-      // Format response
-      entries = entries.map((entry) => {
-        return {
-          project: entry.project,
-          description: entry.description,
-          start_date: entry.start_date,
-          seconds: parseDuration(entry.duration), // '00:25:00' → 1500
-        }
-      })
-
-      client.set(entriesRedisKey, JSON.stringify(entries))
-
-      return res.json(entries)
+      res.json(lol.flat())
     }
   })
 })
