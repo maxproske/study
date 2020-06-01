@@ -22,6 +22,10 @@ cp .env.sample .env
 - [Standard Request Parameters](https://github.com/toggl/toggl_api_docs/blob/master/reports.md#request-parameters)
 - [Reports API v2 Docs](https://github.com/toggl/toggl_api_docs/blob/master/reports/detailed.md)
 - [Reports API v3 Examples](https://github.com/AlessioCoser/report/blob/94d5c0ba5e9da48e3b30da22c47422384158c398/action.js)
+- [Papaparse Docs](https://www.papaparse.com/docs#config)
+
+## Hidden URLS
+- https://toggl.com/reports/api/v3/workspace/1682009/search/time_entries
 
 The Toggl API is divided into two, Toggl API and Reports API. For time entries, you'll need to use the Reports API.
 
